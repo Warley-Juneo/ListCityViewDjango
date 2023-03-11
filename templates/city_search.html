@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Pesquisar Cidades</h1>
+<form method="get" action="{% url 'city_search' %}">
+	{% csrf_token %}
+		{{form.as_p}}
+	<button type="submit">Pesquisar</button>
+</form>
+
+{% if results %}
+	{% if results.count > 0 %}
+<h2>Resultados da pesquisa:</h2>
+<ul>
+	{% for city in results %}
+		<li>{{ city.name }} - {{ city.state }}</li>
+	{% empty %}
+		<li>Não há cidades que correspondam à sua pesquisa.</li>
+	{% endfor %}
+</ul>
+	{% else %}
+		<p>Não há cidades que correspondam à sua pesquisa.</p>
+	{% endif %}
+{% endif %}
+{% endblock %}

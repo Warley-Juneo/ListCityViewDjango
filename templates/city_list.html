@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Lista de Cidades</h1>
+<ul>
+	{% for city in object_list %}
+	<li>{{ city.name }} - {{ city.state.slug }}</li>
+	{% empty %}
+	<li>Não há cidades para mostrar.</li>
+	{% endfor %}
+</ul>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+	<span class="step-links">
+		{% if page_obj.has_previous %}
+		<a href="?page=1">&laquo; Primeira</a>
+		<a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
+		{% endif %}
+
+		<span class="current-page">
+			Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
+		</span>
+
+		{% if page_obj.has_next %}
+		<a href="?page={{ page_obj.next_page_number }}">Próxima &raquo;</a>
+		<a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+		{% endif %}
+	</span>
+</div>
+{% endif %}
+{% endblock %}
