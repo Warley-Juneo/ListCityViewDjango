@@ -16,9 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from findCity.views import CityListView, CitySearchView
+from django.conf.urls.static import static
+from django.conf import settings
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-		path('', CityListView.as_view(), name='city_list'),
-		path('search/', CitySearchView.as_view(), name='city_search'),
-]
+    path('favicon.ico', RedirectView.as_view(url='/static/images/favicon.ico')),
+	path('', CityListView.as_view(), name='city_list'),
+	path('search/', CitySearchView.as_view(), name='city_search'),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
