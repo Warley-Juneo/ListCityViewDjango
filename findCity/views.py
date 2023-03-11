@@ -15,7 +15,7 @@ class CityListView(ListView):
 	def get_query(self):
 		cities = City.objects.all()
 
-		paginator = Paginator(cities, self.paginate_by)
+		paginator = Paginator(cities, self.paginate_by, allow_empity_first_page = True)
 		page = self.request.GET.get('page')
 		try:
 			cities = paginator.page(page)
