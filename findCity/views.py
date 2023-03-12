@@ -5,6 +5,7 @@ from .forms import CitySearchForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse
 from django.views import View
+from unidecode import unidecode
 
 class CityListView(ListView):
 	model = City
@@ -15,7 +16,7 @@ class CityListView(ListView):
 	def get_query(self):
 		cities = City.objects.all()
 
-		paginator = Paginator(cities, self.paginate_by, allow_empity_first_page = True)
+		paginator = Paginator(cities, self.paginate_by, allow_empty_first_page=True)
 		page = self.request.GET.get('page')
 		try:
 			cities = paginator.page(page)
@@ -32,18 +33,44 @@ class CityListView(ListView):
 			return HttpResponse(str(e), status=500)
 
 class CitySearchView(View):
+	paginate_by = 40
+
 	def get(self, request):
 		form = CitySearchForm()
-		return render(request, 'city_search.html', {'form': form})
+		page_number = request.GET.get('page')
+		if page_number:
+			search_term = request.session.get('search_term')
+			results = City.objects.filter(name__startswith=search_term).distinct()
+			paginator = Paginator(results, self.paginate_by, allow_empty_first_page=True)
+			try:
+				page_obj = paginator.page(page_number)
+			except PageNotAnInteger:
+				page_obj = paginator.page(1)
+			except EmptyPage:
+				page_obj = paginator.page(paginator.num_pages)
+			return render(request, 'city_search.html', {'form': form, 'page_obj': page_obj})
+		else:
+			return render(request, 'city_search.html', {'form': form})
 
 	def post(self, request):
 		form = CitySearchForm(request.POST)
 		if form.is_valid():
-			search_term = form.cleaned_data['search_term']
-			print("Search term:", search_term)
+			search_term = unidecode(form.cleaned_data['search_term'])
+			request.session['search_term'] = search_term
 			if search_term:
 				results = City.objects.filter(name__startswith=search_term).distinct()
-				# print o tamnho de result
-				print("Results:", len(results))
-				return render(request, 'city_search.html', {'form': form, 'results': results})
-		return render(request, 'city_search.html', {'form': form})
+
+				paginator = Paginator(results, self.paginate_by, allow_empty_first_page=True)
+				page_number = request.GET.get('page', 1)
+				try:
+					page_obj = paginator.page(page_number)
+				except PageNotAnInteger:
+					page_obj = paginator.page(1)
+				except EmptyPage:
+					page_obj = paginator.page(paginator.num_pages)
+				return render(request, 'city_search.html', {'form': form, 'page_obj': page_obj})
+			else:
+				page_obj = Paginator([], self.paginate_by, allow_empty_first_page=True).page(1)
+				return render(request, 'city_search.html', {'form': form, 'page_obj': page_obj})
+		page_obj = Paginator([], self.paginate_by, allow_empty_first_page=True).page(1)
+		return render(request, 'city_search.html', {'form': form, 'page_obj': page_obj})
